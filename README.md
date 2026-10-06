@@ -6,20 +6,19 @@ the ordinary ITensorMPS product-state constructor forms. No plotting dependencie
 
 ```julia
 using ITensors
-import ITensorMPS
-using ITensorMPS: siteinds
-using ITensorMPSBonds: MPS
+using ITensorMPS
+using ITensorMPSBonds
 
 s = siteinds("Qubit", 6)
 psi = randn(ComplexF64, 64)
 chi = [2, 3, 4, 3, 2]  # N sites have N-1 internal bonds
 
-m = MPS(psi, s, maxbond=chi)
+m = exact_mps(psi, s, maxbond=chi)
 @assert m isa ITensorMPS.MPS
 @assert ITensorMPS.linkdims(m) == chi
 ```
 
-The keyword spelling `MPS(psi, s; maxbond=chi)` is equivalent. The output works
+The keyword spelling `exact_mps(psi, s; maxbond=chi)` is equivalent. The output works
 with ITensorMPS operations and the other ITensor packages.
 
 ## Installation
@@ -30,7 +29,7 @@ GitHub repository once in the Julia environment used by your notebook or project
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/ElHirad/ITensorMPSBonds.jl", rev="v0.1.1")
+Pkg.add(url="https://github.com/ElHirad/ITensorMPSBonds.jl", rev="v0.2.0")
 Pkg.add(["ITensors", "ITensorMPS"])  # For the explicit imports in your own code
 ```
 
@@ -74,7 +73,7 @@ check. These checks include the final canonical sweep. Override deliberately
 when your problem has meaningful tiny coefficients:
 
 ```julia
-m = MPS(psi, s; maxbond=chi, rank_rtol=1e-12, rank_atol=0.0)
+m = exact_mps(psi, s; maxbond=chi, rank_rtol=1e-12, rank_atol=0.0)
 ```
 
 Setting both tolerances to zero uses strict positivity and can count floating-point
@@ -85,14 +84,14 @@ rejected for any chain with internal bonds.
 
 | Input | Example |
 | --- | --- |
-| Numeric vector, matrix, multidimensional array, or array view | `MPS(psi, s; maxbond=chi)` |
-| Dense or QN-conserving ITensor | `MPS(A, s; maxbond=chi)` |
-| Existing MPS | `MPS(m; maxbond=chi)` or `MPS(m, s; maxbond=chi)` |
-| Vector of site ITensors | `MPS(collect(m); maxbond=chi)` |
-| Product-state string or integer labels | `MPS(s, "Up"; maxbond=ones(Int, length(s)-1))` |
-| Product-state label vector or function | `MPS(s, n -> isodd(n) ? "Up" : "Dn"; maxbond=ones(Int, length(s)-1))` |
-| Explicit product-state scalar type | `MPS(ComplexF32, s, "Up"; maxbond=ones(Int, length(s)-1))` |
-| Index-value pairs, with optional scalar type | `MPS([i => 1 for i in s]; maxbond=ones(Int, length(s)-1))` |
+| Numeric vector, matrix, multidimensional array, or array view | `exact_mps(psi, s; maxbond=chi)` |
+| Dense or QN-conserving ITensor | `exact_mps(A, s; maxbond=chi)` |
+| Existing MPS | `exact_mps(m; maxbond=chi)` or `exact_mps(m, s; maxbond=chi)` |
+| Vector of site ITensors | `exact_mps(collect(m); maxbond=chi)` |
+| Product-state string or integer labels | `exact_mps(s, "Up"; maxbond=ones(Int, length(s)-1))` |
+| Product-state label vector or function | `exact_mps(s, n -> isodd(n) ? "Up" : "Dn"; maxbond=ones(Int, length(s)-1))` |
+| Explicit product-state scalar type | `exact_mps(ComplexF32, s, "Up"; maxbond=ones(Int, length(s)-1))` |
+| Index-value pairs, with optional scalar type | `exact_mps([i => 1 for i in s]; maxbond=ones(Int, length(s)-1))` |
 
 Array conversion and ordering follow `ITensorMPS.MPS`: Julia column-major order,
 with the first supplied site varying fastest. Real/complex single/double precision
@@ -120,22 +119,20 @@ to `ITensorMPS.MPS`, including empty/uninitialized constructors. With `maxbond`,
 the input must describe an initialized state; an empty tensor allocation cannot
 satisfy positive nonzero ranks. A single-site state uses `maxbond=Int[]`.
 
-## Why the explicit import?
+## Constructor name and upgrading
 
-`ITensorMPSBonds.MPS` is a constructor wrapper function. The returned **type** is
-always `ITensorMPS.MPS`. Julia does not dispatch methods on keyword arguments, so
-adding `maxbond` directly to existing upstream signatures would overwrite their
-methods and risk precompilation failures. This package does not modify upstream
-method tables. Use `ITensorMPS.MPS` in type annotations.
+The package exports only `exact_mps`. You can load `ITensorMPS` and
+`ITensorMPSBonds` together: `MPS(...)` remains the ordinary upstream constructor,
+while `exact_mps(...; maxbond=chi)` constructs the requested exact ranks.
+The returned **type** is always `ITensorMPS.MPS`, so existing MPS operations
+and type annotations continue to work. No upstream methods are overwritten.
 
-If `MPS` is already bound to the upstream constructor in your notebook, use
-`ITensorMPSBonds.MPS(...)` or the equivalent `exact_mps(...)` alias:
-
-```julia
-using ITensors, ITensorMPS
-using ITensorMPSBonds: exact_mps
-m = exact_mps(psi, s; maxbond=chi)
-```
+Version 0.2.0 removes the package's previous `MPS` name. When upgrading from
+0.1.x, replace `using ITensorMPSBonds: MPS` with `using ITensorMPSBonds`, and
+replace calls to this package's constructor with `exact_mps(...)`.
+Calls to the ordinary `ITensorMPS.MPS(...)` constructor do not change.
+If you already used `exact_mps`, no call changes are needed.
+Restart an existing notebook kernel after upgrading to clear old imports.
 
 ## Examples and verification
 

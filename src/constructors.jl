@@ -1,6 +1,5 @@
 """
-    MPS(psi, sites; maxbond=[chi_1, ..., chi_Nminus1], kwargs...)
-    MPS(args...; maxbond, kwargs...)
+    exact_mps(psi, sites; maxbond=[chi_1, ..., chi_Nminus1], kwargs...)
     exact_mps(args...; maxbond, kwargs...)
 
 Create a standard `ITensorMPS.MPS` with exactly the requested internal link
@@ -20,13 +19,14 @@ by default `rank_atol=0` and `rank_rtol=max(local matrix dimensions)*eps(scalar 
 Ordinary ITensorMPS constructor forms are forwarded, including product-state
 labels, functions, explicit scalar types, Index-value pairs, and tensor vectors.
 Without `maxbond`, arguments are passed straight to the original constructor.
-`MPS(existing_mps, sites; maxbond)` additionally checks the site ordering.
+`exact_mps(existing_mps, sites; maxbond)` additionally checks the site ordering.
 
-Import this constructor explicitly with `using ITensorMPSBonds: MPS`.
-This is a wrapper function, not a replacement type: use `ITensorMPS.MPS` for
-type annotations. No upstream methods are overwritten.
+Load this constructor with `using ITensorMPSBonds`. It can be used alongside
+`using ITensorMPS`: the upstream `MPS` constructor keeps its original name.
+The returned type is `ITensorMPS.MPS`; use that type for annotations.
+No upstream methods are overwritten.
 """
-function MPS(args...; maxbond=nothing, rank_atol=0, rank_rtol=nothing, kwargs...)
+function exact_mps(args...; maxbond=nothing, rank_atol=0, rank_rtol=nothing, kwargs...)
     isnothing(maxbond) && return ITensorMPS.MPS(args...; kwargs...)
     _check_keywords(kwargs)
     _check_tolerances(rank_atol, rank_rtol)
@@ -55,5 +55,3 @@ function MPS(args...; maxbond=nothing, rank_atol=0, rank_rtol=nothing, kwargs...
     chi = _bond_dimensions(maxbond, length(input))
     return _resize(input, chi; rank_atol, rank_rtol)
 end
-
-const exact_mps = MPS
