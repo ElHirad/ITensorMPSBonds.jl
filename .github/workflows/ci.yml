@@ -1,0 +1,39 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        julia: ['1.10', '1']
+        itensor_mps: ['0.3.45', '0.4']
+        os: [ubuntu-latest]
+        include:
+          - julia: '1'
+            itensor_mps: '0.4'
+            os: macos-latest
+          - julia: '1'
+            itensor_mps: '0.4'
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: julia-actions/setup-julia@4c0cb0fce8556fdb04a90347310e5db8b1f98fb9
+        with:
+          version: ${{ matrix.julia }}
+      - name: Resolve selected ITensorMPS version and test
+        env:
+          ITENSORMPS_VERSION: ${{ matrix.itensor_mps }}
+        shell: julia --project=. {0}
+        run: |
+          using Pkg
+          Pkg.add(PackageSpec(name="ITensorMPS", version=ENV["ITENSORMPS_VERSION"]))
+          Pkg.test()
