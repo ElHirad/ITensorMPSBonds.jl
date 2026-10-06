@@ -25,21 +25,26 @@ with ITensorMPS operations and the other ITensor packages.
 ## Installation
 
 Requires Julia 1.10 or later and a maintained Julia runtime is recommended.
-This standalone package is not registered in General. Copy or unzip this folder
-on any computer, then run once in the Julia environment used by your notebook
-or project:
+This standalone package is not registered in General. Install from the public
+GitHub repository once in the Julia environment used by your notebook or project:
 
 ```julia
 using Pkg
-Pkg.develop(path="/absolute/path/to/ITensorMPSBonds")
+Pkg.add(url="https://github.com/ElHirad/ITensorMPSBonds.jl", rev="v0.1.1")
 Pkg.add(["ITensors", "ITensorMPS"])  # For the explicit imports in your own code
 ```
 
+The release tag selects a fixed package version. Omit `rev` to track the main
+branch instead. If you previously installed a local development copy, the same
+`Pkg.add(url=..., rev=...)` call switches it to the GitHub release.
+
 Julia resolves the dependencies automatically; the second line makes them direct
-dependencies of your environment so you can import them yourself. Keep that folder in place
-while using a path-based installation. The first import may compile dependencies;
+dependencies of your environment so you can import them yourself. The first import may compile dependencies;
 normal scripts need only the imports shown above. This package does not load
 Makie, CairoMakie, or either of the previous plotting/drawing packages.
+
+For local development or an extracted ZIP, use
+`Pkg.develop(path="/absolute/path/to/ITensorMPSBonds")` and keep that folder in place.
 
 ## Exact ranks, not zero padding
 
@@ -146,6 +151,13 @@ boundaries, and impossible requests. Dense reconstruction is used only in small
 tests, never to resize an existing MPS in the package.
 The final rank verification adds a canonical SVD sweep. See
 [VALIDATION.md](VALIDATION.md) for the tested versions and results.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) and the [dated security review](docs/SECURITY_REVIEW.md).
+The package has no network, file-writing, shell-execution, or deserialization
+feature. Use it with trusted Julia code and keep Julia itself up to date: package
+updates alone do not replace vulnerable libraries bundled with an older runtime.
 
 ## License
 
